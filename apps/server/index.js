@@ -12,7 +12,6 @@ const server = http.createServer((req, res) => {
       const params = new URLSearchParams(body);
       const question = params.get("question");
       const article = params.get("article");
-      console.log('query', question, article, body);
       body = JSON.parse(body);
       query(body.question, body.article).then(({answer, context}) => {
         const response = {

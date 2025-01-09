@@ -14,7 +14,6 @@ const BasicForm: React.FC = () => {
   const { control, handleSubmit } = useForm();
 
   const onSubmit = (data: FormData) => {
-    console.log(data);
     if (!data.article || !data.question) {
       console.error("Please fill in all fields");
       return;
@@ -64,7 +63,7 @@ const BasicForm: React.FC = () => {
             onValueChange={onChange}
             style={styles.picker}
           >
-            <Picker.Item label="" value={null}/>
+            <Picker.Item label="" value={null} />
             <Picker.Item
               label="The Brothers Karamazov"
               value="https://en.wikipedia.org/wiki/The_Brothers_Karamazov"
@@ -76,6 +75,10 @@ const BasicForm: React.FC = () => {
             <Picker.Item
               label="Harry Potter (film series)"
               value="https://en.wikipedia.org/wiki/Harry_Potter_(film_series)"
+            />
+            <Picker.Item
+              label="Quasi-War"
+              value="https://en.wikipedia.org/wiki/Quasi-War"
             />
           </Picker>
         )}
@@ -92,7 +95,7 @@ const BasicForm: React.FC = () => {
 
 const styles = StyleSheet.create({
   activityIndicator: { margin: 20 },
-  answer:{marginTop: 20},
+  answer: { marginTop: 20 },
   container: {
     padding: 20,
   },
