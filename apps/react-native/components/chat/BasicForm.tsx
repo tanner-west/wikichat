@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, TextInput, ActivityIndicator } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, set } from "react-hook-form";
 import { ThemedText } from "@/components/ThemedText";
+import { queryWikipedia } from "@/services/queries";
+import { useDebounce } from "@uidotdev/usehooks";
 
 interface FormData {
   question?: string;
@@ -10,8 +12,22 @@ interface FormData {
 }
 const BasicForm: React.FC = () => {
   const [fetching, setFetching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [answer, setAnswer] = useState("");
+  const [searchresults, setSearchResults] = useState<any>({
+    titles: [],
+    urls: [],
+  });
   const { control, handleSubmit } = useForm();
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    console.log(debouncedSearchTerm);
+    const encodedSearchTerm = encodeURIComponent(debouncedSearchTerm);
+    queryWikipedia(encodedSearchTerm).then((results) => {
+      setSearchResults(results);
+    });
+  }, [debouncedSearchTerm]);
 
   const onSubmit = (data: FormData) => {
     if (!data.article || !data.question) {
@@ -35,8 +51,12 @@ const BasicForm: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ThemedText style={styles.label}>Article</ThemedText>
+    <View>
+      {fetching && <ActivityIndicator style={styles.activityIndicator} />}
+      {answer && <ThemedText style={styles.answer}>{answer}</ThemedText>}
+      <ThemedText style={styles.label} type="subtitle">
+        Article
+      </ThemedText>
       <Controller
         control={control}
         name="article"
@@ -48,26 +68,20 @@ const BasicForm: React.FC = () => {
             style={styles.picker}
           >
             <Picker.Item label="" value={null} />
-            <Picker.Item
-              label="The Brothers Karamazov"
-              value="https://en.wikipedia.org/wiki/The_Brothers_Karamazov"
-            />
-            <Picker.Item
-              label="The Three-Body Problem (novel)"
-              value="https://en.wikipedia.org/wiki/The_Three-Body_Problem_(novel)"
-            />
-            <Picker.Item
-              label="Harry Potter (film series)"
-              value="https://en.wikipedia.org/wiki/Harry_Potter_(film_series)"
-            />
-            <Picker.Item
-              label="Quasi-War"
-              value="https://en.wikipedia.org/wiki/Quasi-War"
-            />
+            {searchresults?.titles &&
+              searchresults?.titles.map((title: any, i: number) => (
+                <Picker.Item
+                  key={i}
+                  label={title}
+                  value={searchresults.urls[i]}
+                />
+              ))}
           </Picker>
         )}
       />
-      <ThemedText style={styles.label}>Question</ThemedText>
+      <ThemedText style={styles.label} type="subtitle">
+        Question
+      </ThemedText>
       <Controller
         control={control}
         name="question"
@@ -82,21 +96,32 @@ const BasicForm: React.FC = () => {
           />
         )}
       />
+      <ThemedText style={styles.label} type="subtitle">
+        Search Wikipedia
+      </ThemedText>
+      <Controller
+        control={control}
+        name="article_search"
+        defaultValue=""
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            style={styles.input}
+            onChangeText={(v) => setSearchTerm(v)}
+            placeholder="Search"
+            autoCorrect={true}
+          />
+        )}
+      />
       <ThemedText style={styles.button} onPress={handleSubmit(onSubmit)}>
         Submit
       </ThemedText>
-      {fetching && <ActivityIndicator style={styles.activityIndicator} />}
-      {answer && <ThemedText style={styles.answer}>{answer}</ThemedText>}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   activityIndicator: { margin: 20 },
-  answer: { marginTop: 20 },
-  container: {
-    padding: 20,
-  },
+  answer: { marginVertical: 20 },
   label: {
     marginBottom: 10,
   },
