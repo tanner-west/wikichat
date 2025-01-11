@@ -36,22 +36,6 @@ const BasicForm: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ThemedText style={styles.label}>Question</ThemedText>
-      <Controller
-        control={control}
-        name="question"
-        defaultValue=""
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            placeholder="Question"
-          />
-        )}
-      />
-
       <ThemedText style={styles.label}>Article</ThemedText>
       <Controller
         control={control}
@@ -83,7 +67,21 @@ const BasicForm: React.FC = () => {
           </Picker>
         )}
       />
-
+      <ThemedText style={styles.label}>Question</ThemedText>
+      <Controller
+        control={control}
+        name="question"
+        defaultValue=""
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            style={styles.input}
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+            placeholder="Question"
+          />
+        )}
+      />
       <ThemedText style={styles.button} onPress={handleSubmit(onSubmit)}>
         Submit
       </ThemedText>
