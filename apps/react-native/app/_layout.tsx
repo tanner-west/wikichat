@@ -1,11 +1,5 @@
-import { useEffect, useRef } from "react";
-import {
-  Text,
-  View,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-} from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { TouchableOpacity } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -31,21 +25,30 @@ import { useAtom } from "jotai";
 import Icon from "@expo/vector-icons/FontAwesome6";
 import usePrevious from "@/hooks/usePrevious";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { article } from "@/state/chat";
 import Search from "@/components/wikipedia/Search";
+import DrawerContent from "@/components/drawer/DrawerContent";
+import { chatHistoryId as chatHistoryIdAtom } from "@/state/chat";
+import { useDB } from "@/services/database";
+import { DrawerContentComponentProps } from "@react-navigation/drawer";
+import Toast from 'react-native-toast-message';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+function ToastContainer(){
+  const {top} = useSafeAreaInsets();
+  return <Toast topOffset={top}/>
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
-  const [selectedArticle] = useAtom(article);
-  const prevSelectedArticle = usePrevious(selectedArticle);
+  const [articleTitle, setArticleTitle] = useState<string>("");
+  const [chatHistoryId] = useAtom(chatHistoryIdAtom);
+  const prevChatHistoryId = usePrevious(chatHistoryId);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
+  const { getChatHistoryByIdAsync } = useDB();
 
   useEffect(() => {
     if (loaded) {
@@ -54,10 +57,15 @@ export default function RootLayout() {
   }, [loaded]);
 
   useEffect(() => {
-    if (prevSelectedArticle !== selectedArticle && selectedArticle) {
+    if (prevChatHistoryId !== chatHistoryId && chatHistoryId) {
       bottomSheetModalRef.current?.dismiss();
+      if (chatHistoryId) {
+        getChatHistoryByIdAsync(chatHistoryId).then((chatHistory) => {
+          setArticleTitle(chatHistory?.article_title || "");
+        });
+      }
     }
-  }, [selectedArticle]);
+  }, [chatHistoryId, prevChatHistoryId]);
 
   if (!loaded) {
     return null;
@@ -72,27 +80,16 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <KeyboardProvider>
               <Drawer
-                drawerContent={() => (
-                  <View style={{ marginTop: topInset }}>
-                    <FlatList
-                      data={Array.from({ length: 10 }).map((_, i) => ({
-                        key: i.toString(),
-                      }))}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => bottomSheetModalRef.current?.present()}
-                        >
-                          <Text style={{ color: "white" }}>{item.key}</Text>
-                        </TouchableOpacity>
-                      )}
-                    />
-                  </View>
+                drawerContent={({
+                  navigation,
+                }: DrawerContentComponentProps) => (
+                  <DrawerContent navigation={navigation} />
                 )}
               >
                 <Drawer.Screen
                   name="index"
                   options={{
-                    headerTitle: selectedArticle.title,
+                    headerTitle: articleTitle,
                     headerStyle: { height: 100 },
                     headerRight: () => (
                       <TouchableOpacity
@@ -102,8 +99,6 @@ export default function RootLayout() {
                         <Icon name="book" size={24} color="white" />
                       </TouchableOpacity>
                     ),
-                    // TODO: implement the drawer
-                    headerLeft: () => null,
                   }}
                 />
                 <Drawer.Screen name="+not-found" />
@@ -119,6 +114,7 @@ export default function RootLayout() {
                 </BottomSheetView>
               </BottomSheetModal>
               <StatusBar style="auto" />
+              <ToastContainer/>
             </KeyboardProvider>
           </SafeAreaProvider>
         </ThemeProvider>

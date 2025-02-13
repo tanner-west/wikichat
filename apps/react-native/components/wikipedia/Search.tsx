@@ -1,5 +1,5 @@
 import { useWikipediaSearch } from "@/hooks/useWikipediaSearch";
-import { article } from "@/state/chat";
+import { chatHistoryId as chatHistoryIdAtom } from "@/state/chat";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import {
@@ -9,11 +9,13 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
+import { createChatHistory } from "@/services/database";
+import * as crypto from "expo-crypto";
 
 export default function Search() {
   const { search, searchResults } = useWikipediaSearch();
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [_, setSelectedArticle] = useAtom(article);
+  const [chatHistoryId, setChatHistoryId] = useAtom(chatHistoryIdAtom);
 
   return (
     <View>
@@ -39,7 +41,9 @@ export default function Search() {
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => {
-              setSelectedArticle({ title: item.title, url: item.url });
+              const id = crypto.randomUUID();
+              createChatHistory(id, item.title, item.url);
+              setChatHistoryId(id);
             }}
           >
             <Text

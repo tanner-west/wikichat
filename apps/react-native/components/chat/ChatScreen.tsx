@@ -6,10 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   useWindowDimensions,
+  Text,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { TextInput } from "react-native-gesture-handler";
-import { article } from "@/state/chat";
+import { chatHistoryId as chatHistoryIdAtom } from "@/state/chat";
 import { useAtom } from "jotai";
 import {
   KeyboardControllerView,
@@ -24,11 +25,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePrevious } from "@uidotdev/usehooks";
-
-interface IChatMessage {
-  message: string;
-  sent?: boolean;
-}
+import { createMessage, Message, useDB } from "@/services/database";
+import * as crypto from "expo-crypto";
+import Toast from "react-native-toast-message";
 
 interface FormData {
   question?: string;
@@ -38,23 +37,31 @@ interface FormData {
 const MESSAGE_BAR_HEIGHT = 50;
 
 const BasicForm: React.FC = () => {
-  const [chatHistory, setChatHistory] = useState<IChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const [articleUrl, setArticleUrl] = useState<string>("");
   const [fetching, setFetching] = useState(false);
-  const [selectedArticle] = useAtom(article);
+  const [chatHistoryId] = useAtom(chatHistoryIdAtom);
+  const prevChatHistoryId = usePrevious(chatHistoryId);
 
   const { height } = useReanimatedKeyboardAnimation();
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
 
-  const prevSelectedArticle = usePrevious(selectedArticle);
-
   const { control, handleSubmit, setValue } = useForm();
+  const { getMessagesByChatIdAsync, getChatHistoryByIdAsync } = useDB();
 
   useEffect(() => {
-    if (prevSelectedArticle !== selectedArticle && selectedArticle) {
-      setChatHistory([]);
+    if (chatHistoryId !== prevChatHistoryId) {
+      if (chatHistoryId) {
+        getMessagesByChatIdAsync(chatHistoryId).then((messages) => {
+          setChatHistory(messages.reverse());
+        });
+        getChatHistoryByIdAsync(chatHistoryId).then((chatHistory) => {
+          setArticleUrl(chatHistory?.article_url || "");
+        });
+      }
     }
-  }, [selectedArticle]);
+  }, [chatHistoryId, prevChatHistoryId]);
 
   const chatHistoryFlatListRef = useRef<FlatList>(null);
 
@@ -69,28 +76,48 @@ const BasicForm: React.FC = () => {
       return;
     }
     if (typeof data.question === "string") {
+      if (!chatHistoryId) {
+        Toast.show({
+          type: "error",
+          text1: "Please choose an article or chat history!",
+        });
+        return;
+      }
+      const id = crypto.randomUUID();
       setChatHistory((prev) => [
         ...prev,
-        { message: data.question || "", sent: true },
+        { text: data.question || "", sent: true, id, chatId: chatHistoryId },
       ]);
+
+      createMessage(id, chatHistoryId, data.question, true);
     }
     const submitData = {
-      article: selectedArticle.url,
+      article: articleUrl,
       question: data.question,
     };
     setFetching(true);
     setValue("question", "");
-    fetch("http://localhost:3100/api", {
+    fetch(process.env.EXPO_PUBLIC_API_BASE || "", {
       method: "POST",
       body: JSON.stringify(submitData),
     })
       .then((res) => res.json())
       .then((json) => {
+        if (!chatHistoryId) {
+          return;
+        }
+        const id = crypto.randomUUID();
         setChatHistory((prev) => [
           ...prev,
-          { message: json.answer || "", sent: false },
+          { text: json.answer || "", sent: false, chatId: chatHistoryId, id },
         ]);
         setFetching(false);
+
+        createMessage(id, chatHistoryId, json.answer, false)
+          .then(() => {})
+          .catch((err) => {
+            console.error(err);
+          });
       })
       .catch((err) => {
         console.error(err);
@@ -138,21 +165,38 @@ const BasicForm: React.FC = () => {
       }}
       style={styles.keyboardControllerView}
     >
-      <Animated.View style={[styles.flatListContainer, animatedStyle]}>
-        <FlatList
-          ref={chatHistoryFlatListRef}
-          data={chatHistory}
-          renderItem={({ item }) => (
-            <ChatBubble message={item.message} sent={item.sent} />
-          )}
-          ListFooterComponent={
-            fetching ? (
-              <ActivityIndicator style={styles.activityIndicator} />
-            ) : null
-          }
-          style={styles.flatList}
-        />
-      </Animated.View>
+      {!chatHistoryId ? (
+        <View
+          style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
+        >
+          <Text
+            style={{
+              color: "white",
+              fontSize: 24,
+              textAlign: "center",
+              paddingHorizontal: 10,
+            }}
+          >
+            Tap the lil book icon up there ☝️ to get started
+          </Text>
+        </View>
+      ) : (
+        <Animated.View style={[styles.flatListContainer, animatedStyle]}>
+          <FlatList
+            ref={chatHistoryFlatListRef}
+            data={chatHistory}
+            renderItem={({ item }: { item: Message }) => (
+              <ChatBubble message={item.text} sent={item.sent} />
+            )}
+            ListFooterComponent={
+              fetching ? (
+                <ActivityIndicator style={styles.activityIndicator} />
+              ) : null
+            }
+            style={styles.flatList}
+          />
+        </Animated.View>
+      )}
       <KeyboardStickyView
         style={{ height: MESSAGE_BAR_HEIGHT }}
         offset={{ opened: -5, closed: -bottomInset }}
