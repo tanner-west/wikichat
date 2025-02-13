@@ -219,6 +219,8 @@ PODS:
     - ExpoModulesCore
   - ExpoBlur (14.0.1):
     - ExpoModulesCore
+  - ExpoCrypto (14.0.2):
+    - ExpoModulesCore
   - ExpoFileSystem (18.0.5):
     - ExpoModulesCore
   - ExpoFont (13.0.1):
@@ -255,6 +257,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - ExpoSplashScreen (0.29.18):
+    - ExpoModulesCore
+  - ExpoSQLite (15.0.6):
     - ExpoModulesCore
   - ExpoSymbols (0.2.0):
     - ExpoModulesCore
@@ -2070,6 +2074,7 @@ DEPENDENCIES:
   - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
+  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
   - ExpoHaptics (from `../node_modules/expo-haptics/ios`)
@@ -2078,6 +2083,7 @@ DEPENDENCIES:
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
+  - ExpoSQLite (from `../node_modules/expo-sqlite/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
@@ -2182,6 +2188,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-asset/ios"
   ExpoBlur:
     :path: "../node_modules/expo-blur/ios"
+  ExpoCrypto:
+    :path: "../node_modules/expo-crypto/ios"
   ExpoFileSystem:
     :path: "../node_modules/expo-file-system/ios"
   ExpoFont:
@@ -2198,6 +2206,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
+  ExpoSQLite:
+    :path: "../node_modules/expo-sqlite/ios"
   ExpoSymbols:
     :path: "../node_modules/expo-symbols/ios"
   ExpoSystemUI:
@@ -2357,6 +2367,7 @@ SPEC CHECKSUMS:
   expo-dev-menu-interface: 4baf2f8b3b79ce37cf4b900e4b3ba6df3384f0a1
   ExpoAsset: 6f7a8887cbb9fb39fdb0808e7f6f74ba0e1ae9b6
   ExpoBlur: 2b92367da8158eeaee9bfa940d82512a09c8e0c6
+  ExpoCrypto: e97e864c8d7b9ce4a000bca45dddb93544a1b2b4
   ExpoFileSystem: 6774e1aa2d3c7edfde11855cf5c635a3565a4918
   ExpoFont: 12b0217e42ac97029d0f317f0486039a8508cf52
   ExpoHaptics: f8eacde90398b8be3648ed823b6e9e6bf87ece3f
@@ -2365,6 +2376,7 @@ SPEC CHECKSUMS:
   ExpoLinking: 40e30b571ffb77b280a38bed137d89b21f46f2a0
   ExpoModulesCore: 5c2036ec792be80ebf777ba5bbe197f20d9b6eed
   ExpoSplashScreen: 5397c2419fb3ca0788de37ea2547deac376aad83
+  ExpoSQLite: a2f485c918e16f4d77a1c208b36754d73663b43e
   ExpoSymbols: ed2f35e4a0290ff242eb295bd47adff2e46f5bfc
   ExpoSystemUI: 778d700c6f38d3d7b8794460f50c1ca05c4f7462
   ExpoWebBrowser: b658ba8a9161f1b54afb279591cfce2cb73330fa
